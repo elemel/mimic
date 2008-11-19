@@ -21,10 +21,6 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 -- OTHER DEALINGS IN THE SOFTWARE.
 
-local function identity(...)
-    return ...
-end
-
 local function iter_str(s)
     local index = 0
     local length = #s
@@ -53,7 +49,7 @@ local function iter(iterable)
         return iter_str(iterable)
     elseif type(iterable) == "table" then
         local iter_func = iterable["__iter"]
-        if iter_func ~= nil then
+        if iter_func then
             return iter_func(iterable)
         else
             return values(iterable)
@@ -86,12 +82,8 @@ local function reduce(iterable, func, init)
     return result
 end
 
-local function add(left, right)
-    return left + right
-end
-
 local function all(iterable, pred)
-    pred = pred or identity
+    pred = pred or function(...) return ... end
     local next_item = iter(iterable)
     for item in next_item do
         if not pred(item) then
@@ -102,7 +94,7 @@ local function all(iterable, pred)
 end
 
 local function any(iterable, pred)
-    pred = pred or identity
+    pred = pred or function(...) return ... end
     local next_item = iter(iterable)
     for item in next_item do
         if pred(item) then
@@ -131,7 +123,7 @@ local function blank(value)
         return value == ""
     elseif type(value) == "table" then
         local blank_func = value["__blank"]
-        if blank_func ~= nil then
+        if blank_func then
             return blank_func(value)
         else
             return next(value) == nil
@@ -181,14 +173,6 @@ local function filter(iterable, pred)
     end
 end
 
-local function items(t)
-    local key, value = nil, nil
-    return function()
-        key, value = next(t, key)
-        return key, value
-    end
-end
-
 local function join(iterable, separator)
     return table.concat(list(iterable), (separator or " "))
 end
@@ -213,11 +197,8 @@ local function map(iterable, func)
     end
 end
 
-local function mul(left, right)
-    return left * right
-end
-
 local function product(iterable)
+    local mul = function(left, right) return left * right end
     return reduce(iterable, mul, 1)
 end
 
@@ -283,6 +264,7 @@ local function split(s, pattern, plain)
 end
 
 local function sum(iterable)
+    local add = function(left, right) return left + right end
     return reduce(iterable, add, 0)
 end
 
@@ -322,7 +304,6 @@ return {
     equiv = equiv,
     dict = dict,
     filter = filter,
-    items = items,
     iter = iter,
     join = join,
     keys = keys,
